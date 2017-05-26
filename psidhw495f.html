@@ -1,0 +1,335 @@
+<html>
+    <head>
+        <script type="text/javascript">
+            
+            
+            document.onkeydown = function(event)
+            {
+                var keyCode = event.which;
+                if(keyCode == 13)
+                {
+                    //document.write("pressed enter key");
+                    document.getElementById("subquerybtn").onclick();
+                    //viewXML();
+                }
+            }
+        
+        
+        var flag = false;
+        function viewXML(what)
+        {
+            var URL = what.URL.value.trim();
+            
+            if(URL == "")
+            {
+                alert("Error: Please enter URL");
+            }
+            else
+            {
+                var xmlDoc;
+                
+                function loadXML(url)
+                {
+                    if (window.XMLHttpRequest)
+                    {
+                        // code for IE7+, Firefox, Chrome, Opera, Safari
+                        xmlhttp=new XMLHttpRequest();
+                    }
+                    else
+                    {
+                        // code for IE6, IE5
+                        xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                    
+                    
+                    
+                    try
+                    {
+                        
+                        flag=false;
+                        //document.write(xmlhttp.onreadystatechange.status);
+                        
+                        xmlhttp.open("GET",url,false); //open, send, responseXML are
+                        xmlhttp.send();
+                    }
+                    
+                    catch(e)
+                    {
+                        alert("Error: File Does Not Exist");
+                        flag = true;
+                    }
+                    
+                    
+                    
+                    if(xmlhttp.status == 404)
+                    {
+                        alert("Error: File Does Not Exist.");
+                        flag = true;
+                    }
+                    
+                    
+                    p = new DOMParser();
+                    str = xmlhttp.responseText;
+                    xmlDoc = p.parseFromString(str,"application/xml");
+                    
+                    if(xmlDoc.documentElement.nodeName == "parseerror")
+                    {
+                        alert("Error: Parse Error");
+                        flag = true;
+                    }
+                    
+                    xmlDoc=xmlhttp.responseXML;
+                    return xmlDoc;
+                }
+                
+                xmlDoc = loadXML(URL);
+                
+                // ....... processing the document goes here
+                if(window.ActiveXObject) //if IE, simply execute script (due to async prop).
+                {
+                    if (xmlDoc.parseError.errorCode != 0)
+                    {
+                        var myErr = xmlDoc.parseError;
+                        generateError(xmlDoc);
+                        hWin = window.open("", "Error", "height=300,width=340");
+                        hWin.document.write(html_text);
+                    }
+                    else
+                    {
+                        generateHTML(xmlDoc);
+                        hWin = window.open("", "Assignment4", "height=800,width=600"); //note that its blank
+                        hWin.document.write(html_text);
+                    }
+                    
+                }
+                
+                else //else if FF, execute script once XML object has loaded
+                {
+                    //document.write(flag);
+                    if (flag == false)
+                    {
+                        xmlDoc.onload=generateHTML(xmlDoc);
+                        
+                        airlines=xmlDoc.getElementsByTagName("Airline");
+                        if(airlines.length == 0)
+                        {
+                            alert("Error: No Airlines Listed.");
+                        }
+                        else
+                        {
+                            hWin = window.open("", "Assignment4", "height=700,width=1000");
+                            hWin.document.write(html_text);
+                        }
+                        
+                        
+                        hWin.document.close();
+                    }
+                }
+            }}
+        
+        
+        
+        function generateHTML(xmlDoc)
+        {
+            try{
+                
+                ELEMENT_NODE = 1; // MS parser doesn't define Node.ELEMENT_NODE
+                root=xmlDoc.DocumentElement; // root = Mainline
+                
+                html_text="<html><head></head><body>"; //Start of HTML page
+                html_text+="<table border='2'>"; //Create table of border 2
+                
+                tabletag=xmlDoc.getElementsByTagName("Table").item(0).firstChild; // Get element Table
+                
+                dataTag=xmlDoc.getElementsByTagName("Data");
+                //document.write(dataTag.length);
+                
+                html_text+="<tbody>";
+                html_text+="<tr>";
+                
+                
+                // output the headers
+                for(i=0;i<dataTag.length;i++)
+                {
+                    
+                    if(dataTag.item(i).nodeType==ELEMENT_NODE) // Check if its element node
+                    {
+                        //document.write("In here now\n");
+                        datavalue=dataTag.item(i).firstChild.nodeValue.trim();
+                        //document.write(datavalue);
+                        html_text+="<th>"+datavalue+"</th>";
+                    }
+                }
+                
+                
+                
+                airlines=xmlDoc.getElementsByTagName("Airline");
+                iata=xmlDoc.getElementsByTagName("IATA");
+                hubs=xmlDoc.getElementsByTagName("Hubs");
+                notes=xmlDoc.getElementsByTagName("Notes");
+                homepage=xmlDoc.getElementsByTagName("HomePage");
+                plane=xmlDoc.getElementsByTagName("Plane");
+                //document.write(hubs.item(0).childElementCount)
+                //document.write(hubs.item(1).childElementCount)
+                //document.write(hubs.item(2).childElementCount)
+                //document.write(hubs.item(3).childElementCount)
+                
+                x = 400, y = 200
+                
+                
+                
+                for(j=0;j<airlines.length;j++)
+                {
+                    html_text+="<tr>";
+                    
+                    //Airline
+                    acheck = airlines.item(j).firstChild;
+                    
+                    if(acheck==null)
+                    {
+                        html_text+="<td>"+" "+"</td>";
+                    }
+                    else if(airlines.item(j).firstChild.nodeValue!="\n")
+                    {
+                        a = airlines.item(j).firstChild.nodeValue.trim();
+                        html_text+="<td>"+a+"</td>";
+                    }
+                    
+                    
+                    
+                    //IATA Code
+                    iacheck=iata.item(j).firstChild;
+                    
+                    if(iacheck==null)
+                    {
+                        html_text+="<td>"+" "+"</td>";
+                    }
+                    else if(iata.item(j).firstChild.nodeValue!="\n")
+                    {
+                        ia = iata.item(j).firstChild.nodeValue.trim();
+                        html_text+="<td>"+ia+"</td>";
+                    }
+                    
+                    
+                    //Hubs
+                    x = hubs.item(j).children;
+                    
+                    if(x==null)
+                    {
+                        html_text+="<td></td>";
+                    }
+                    else
+                    {
+                        html_text+="<td><ul>"
+                        for (k=0;k<x.length;k++)
+                        {
+                            tempk = x.item(k).firstChild;
+                            if(tempk==null)
+                            {
+                                html_text+="<li></li>";
+                            }
+                            else
+                            {
+                                if(k == 0)
+                                {
+                                    html_text+="<li><b>"+tempk.nodeValue.trim()+"</b></li>";
+                                }
+                                else
+                                {
+                                    html_text+="<li>"+tempk.nodeValue.trim()+"</li>";
+                                }
+                            }
+                            
+                        }
+                        
+                        html_text+="</ul></td>"
+                    }
+                    
+                    
+                    
+                    //Notes
+                    ncheck=notes.item(j);
+                    
+                    if(ncheck==null)
+                    {
+                        html_text+="<td><p>"+" "+"</p> </td>";
+                    }
+                    else if(notes.item(j).innerHTML!="\n")
+                    {
+                        n = notes.item(j).innerHTML.trim();
+                        html_text+="<td><p>"+n+"</p> </td>";
+                    }
+                    
+                    
+                    
+                    //HomePage
+                    hpcheck=homepage.item(j).firstChild;
+                    
+                    if(hpcheck==null)
+                    {
+                        html_text+="<td></td>";
+                    }
+                    else if(homepage.item(j).firstChild.nodeValue!="\n")
+                    {
+                        hp = homepage.item(j).firstChild.nodeValue.trim();
+                        html_text+="<td><a href='"+hp+"'>"+hp+"</a></td>";
+                    }
+                    
+                    
+                    
+                    //Plane
+                    pcheck=plane.item(j).firstChild;
+                    
+                    if(pcheck==null)
+                    {
+                        
+                        html_text+="<td></td>";
+                        
+                    }
+                    else if(plane.item(j).firstChild.nodeValue!="\n")
+                    {
+                        p = plane.item(j).firstChild.nodeValue.trim();
+                        html_text+="<td><img src='"+p+"'width='"+x+"' height='"+y+"'></td>";
+                    }
+                    
+                    html_text+="</tr>";
+                }
+                
+                
+                
+                
+                
+                html_text+="</tbody>";
+                html_text+="</table>";
+                html_text+="<noscript></body></html>";
+                //document.write(html_text)
+                
+            }
+            catch(e){
+                alert("Error: XML File Not Valid");
+            }
+        }
+        
+        
+        
+            </script>
+        
+    </head>
+    
+    <body>
+        
+        <center>
+            <br><br><br><br><br>
+            <h4> Enter URL for Airlines List XML File</h4>
+            
+            <form name="firstform" method="POST" id ="location">
+                <input type="text" id="urltext" name="URL" /><br><br>
+                <input type="button" id="subquerybtn" name="submit" value="Submit Query" onClick="viewXML(this.form)" />
+            </form>
+        </center>
+        <noscript>
+            </body>
+    
+    
+    <noscript>
+</html>
